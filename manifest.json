@@ -1,0 +1,18 @@
+{
+  "name": "Nev Tex Pro",
+  "short_name": "NevTexPro",
+  "description": "Nev Tex Tekstil Etüt ve Üretim Takip Sistemi",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#2c3e50",
+  "theme_color": "#1F51FF",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
