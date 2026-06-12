@@ -40,33 +40,42 @@ window.openReportModal = function(type) {
     setTimeout(function() { onReportTypeChange(); }, 80);
 };
 
-// Rapor türü değişince: model filter satırını göster/gizle + rapor üret
+// Rapor türü değişince: model filter her zaman görünür + rapor üret
 window.onReportTypeChange = function() {
-    var type = (document.getElementById('report-type-select') || {}).value || '';
-    var filterRow = document.getElementById('report-model-filter-row');
-    if (filterRow) {
-        filterRow.style.display = (type === 'model-production') ? 'block' : 'none';
-    }
     generateReport();
 };
 
-// Model dropdown'ı aktif siparislerle doldur
+// Model dropdown'ı doldur (orders + studies.model_name kaynaklı)
 function _populateModelSelect() {
     var sel = document.getElementById('report-model-select');
     if (!sel) return;
-    var orders = (typeof mockData !== 'undefined' && mockData.orders) ? mockData.orders : [];
-    // Mevcut seçimi koru
+    var orders  = (typeof mockData !== 'undefined' && mockData.orders)  ? mockData.orders  : [];
+    var studies = (typeof mockData !== 'undefined' && mockData.studies) ? mockData.studies : [];
+
     var prev = sel.value;
     sel.innerHTML = '<option value="">— Tüm Modeller —</option>';
+
     var seen = {};
+    // 1) Aktif siparislerden
     orders.forEach(function(o) {
-        var label = (o.customer ? o.customer + ' / ' : '') + (o.model || '-');
-        var val   = String(o.id);
-        if (!seen[val]) {
-            seen[val] = true;
+        var key = (o.customer ? o.customer + ' / ' : '') + (o.model || '-');
+        if (!seen[key]) {
+            seen[key] = true;
             var opt = document.createElement('option');
-            opt.value = val;
-            opt.textContent = label;
+            opt.value = key;           // model_name formatıyla eşleşecek
+            opt.dataset.orderId = String(o.id);
+            opt.textContent = key;
+            sel.appendChild(opt);
+        }
+    });
+    // 2) Etüt kayıtlarındaki model_name değerlerinden
+    studies.forEach(function(s) {
+        var key = s.model_name || '';
+        if (key && !seen[key]) {
+            seen[key] = true;
+            var opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = key;
             sel.appendChild(opt);
         }
     });
@@ -86,8 +95,15 @@ window.generateReport = function() {
 
     const titleEl    = document.getElementById('report-modal-title');
     const subtitleEl = document.getElementById('report-modal-subtitle');
+    // Model filtresi
+    var selModel = '';
+    var selEl2 = document.getElementById('report-model-select');
+    if (selEl2) selModel = selEl2.value || '';
+
     if (titleEl)    titleEl.textContent    = REPORT_TITLES[type] || 'Rapor';
-    if (subtitleEl) subtitleEl.textContent = (startStr || '---') + ' → ' + (endStr || '---') + ' aralığı';
+    var subtitleParts = [(startStr || '---') + ' → ' + (endStr || '---') + ' aralığı'];
+    if (selModel) subtitleParts.push('Model: ' + selModel);
+    if (subtitleEl) subtitleEl.textContent = subtitleParts.join(' │ ');
 
     // mockData güvenli erişim
     if (typeof mockData === 'undefined') {
@@ -131,12 +147,21 @@ function _inRange(dateVal, start, end) {
     return true;
 }
 
+// Seçili model adını döndür
+function _getSelectedModel() {
+    var sel = document.getElementById('report-model-select');
+    return sel ? (sel.value || '') : '';
+}
+
 // ---------------------------------------------
 //  RAPOR 1: Günlük Verimlilik
 // ---------------------------------------------
 function _buildDailyEff(start, end) {
-    const filtered = (mockData.studies || []).filter(function(s) {
-        return _inRange(s.time || s.created_at, start, end);
+    var selModel = _getSelectedModel();
+    var filtered = (mockData.studies || []).filter(function(s) {
+        if (!_inRange(s.time || s.created_at, start, end)) return false;
+        if (selModel && (s.model_name || '') !== selModel) return false;
+        return true;
     });
 
     var byDate = {};
@@ -168,7 +193,7 @@ function _buildDailyEff(start, end) {
         rows: rows,
         summary: [
             { icon: '📋', value: filtered.length,                   label: 'Toplam Kayıt' },
-            { icon: '👕', value: totalProd.toLocaleString('tr-TR'), label: 'Üretilen Adet' },
+            { icon: '👕', value: totalProd.toLocaleString('tr-TR'), label: selModel ? selModel + ' Üretilen' : 'Üretilen Adet' },
             { icon: '⚡', value: '%' + avgEff,                      label: 'Ort. Verimlilik' },
             { icon: '📅', value: Object.keys(byDate).length,        label: 'Gün Sayısı' }
         ]
@@ -179,13 +204,18 @@ function _buildDailyEff(start, end) {
 //  RAPOR 2: Personel Performansı
 // ---------------------------------------------
 function _buildPersonnelPerf(start, end) {
+    var selModel = _getSelectedModel();
     var filtered = (mockData.studies || []).filter(function(s) {
-        return _inRange(s.time || s.created_at, start, end);
+        if (!_inRange(s.time || s.created_at, start, end)) return false;
+        if (selModel && (s.model_name || '') !== selModel) return false;
+        return true;
     });
     var byPerson = {};
     filtered.forEach(function(s) {
-        var name = s.personnel_name || '-';
-        if (!byPerson[name]) byPerson[name] = { total: 0, effSum: 0, count: 0 };
+        // operation_name formatı: "PersonelAdı|||OperasyonAdı"
+        var parts = (s.operation_name || '').split('|||');
+        var name  = parts[0] || s.personnel_name || '-';
+        if (!byPerson[name]) byPerson[name] = { total: 0, effSum: 0, count: 0, model: s.model_name || '-' };
         var eff = s.cycle_time > 0 ? (s.efficiency / s.cycle_time) * 100 : 0;
         byPerson[name].total   += s.efficiency || 0;
         byPerson[name].effSum  += eff;
@@ -196,16 +226,16 @@ function _buildPersonnelPerf(start, end) {
         .sort(function(a, b) { return (b[1].effSum / b[1].count) - (a[1].effSum / a[1].count); })
         .map(function(entry) {
             var name = entry[0], d = entry[1];
-            return [name, d.count, d.total.toLocaleString('tr-TR'), '%' + (Math.round(d.effSum / d.count) || 0)];
+            return [name, d.model, d.count, d.total.toLocaleString('tr-TR'), '%' + (Math.round(d.effSum / d.count) || 0)];
         });
 
     var topPerson = rows.length > 0 ? rows[0][0] : '-';
     var avgAll    = rows.length > 0
-        ? Math.round(rows.reduce(function(a, r) { return a + parseInt(r[3].replace('%', '')); }, 0) / rows.length)
+        ? Math.round(rows.reduce(function(a, r) { return a + parseInt((r[4] || '0').replace('%', '')); }, 0) / rows.length)
         : 0;
 
     return {
-        headers: ['Personel Adı', 'Kayıt Sayısı', 'Toplam Üretilen', 'Ort. Performans'],
+        headers: ['Personel Adı', 'Model', 'Kayıt Sayısı', 'Toplam Üretilen', 'Ort. Performans'],
         rows: rows,
         summary: [
             { icon: '👥', value: Object.keys(byPerson).length, label: 'Aktif Personel' },
