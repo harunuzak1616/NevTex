@@ -74,7 +74,7 @@
             <div class="top-header glass">
                 <h1 id="page-title">Genel Bakış</h1>
                 <div class="user-profile">
-                    <button class="btn-primary" style="background: var(--success);" onclick="openReportModal()">
+                    <button id="btn-global-reports" class="btn-primary" style="background: var(--success);" onclick="openReportModal()">
                         <i class="fa-solid fa-file-export"></i> Raporlar
                     </button>
                     <button id="global-refresh-btn" class="btn-primary" style="background: var(--primary-light);" onclick="refreshAllData()">
@@ -494,51 +494,71 @@
     <!-- Report Modal -->
     <div id="report-modal" class="modal">
         <div class="modal-content glass" style="max-width: 850px; width: 95%;">
-            <div class="modal-header">
-                <h3 id="report-modal-title">Rapor Oluştur</h3>
-                <button class="close-modal" onclick="document.getElementById('report-modal').style.display='none'">&times;</button>
-            </div>
-            <p id="report-modal-subtitle" style="color:var(--text-muted); font-size:0.9rem; margin-top:5px; padding: 0 15px;"></p>
-            <div class="form-container" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: end;">
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Rapor Türü</label>
-                    <select id="report-type-select" onchange="onReportTypeChange()" class="form-control" style="width:100%; padding:8px;">
-                        <option value="daily-efficiency">Günlük Verimlilik</option>
-                        <option value="personnel-performance">Personel Performansı</option>
-                        <option value="firm-production">Atölye Üretim Raporu</option>
-                        <option value="cumulative-summary">Kümülatif Özet</option>
-                    </select>
+            <!-- STEP 1: Atölye Seçimi -->
+            <div id="report-select-firm-step" style="padding: 20px;">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">
+                    <h3>📊 Raporlama — Atölye Seçiniz</h3>
+                    <button class="close-modal" onclick="document.getElementById('report-modal').style.display='none'">&times;</button>
                 </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Başlangıç Tarihi</label>
-                    <input type="date" id="report-date-start" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label>Bitiş Tarihi</label>
-                    <input type="date" id="report-date-end" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
-                </div>
-            </div>
-            <!-- Model Filtresi — tüm rapor türlerinde görünür -->
-            <div id="report-model-filter-row" style="padding: 0 15px 10px 15px;">
-                <div class="form-group" style="margin-bottom:0; max-width:340px;">
-                    <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">🧵 Model / Sipariş Filtresi</label>
-                    <select id="report-model-select" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
-                        <option value="">— Tüm Modeller —</option>
-                    </select>
+                <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom: 25px;">Hangi atölyenin üretim ve verimlilik verilerini raporlamak istiyorsunuz?</p>
+                <div id="report-firm-buttons-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <!-- JavaScript ile doldurulacak -->
                 </div>
             </div>
 
-            
-            <div style="padding: 15px;">
-                <!-- Rapor Özeti Kartları -->
-                <div id="report-summary-cards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;"></div>
+            <!-- STEP 2: Raporlama Ekranı -->
+            <div id="report-main-step" style="display: none;">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button class="btn-primary" style="background: var(--secondary); padding: 5px 12px; font-size: 0.85rem;" onclick="goBackToFirmSelect()">
+                            <i class="fa-solid fa-arrow-left"></i> Atölye Değiştir
+                        </button>
+                        <h3 id="report-modal-title" style="margin: 0;">Rapor Oluştur</h3>
+                    </div>
+                    <button class="close-modal" onclick="document.getElementById('report-modal').style.display='none'">&times;</button>
+                </div>
+                <p id="report-modal-subtitle" style="color:var(--text-muted); font-size:0.9rem; margin-top:10px; padding: 0 15px;"></p>
                 
-                <!-- Rapor Tablo Önizlemesi -->
-                <div id="report-preview-container" class="table-container" style="max-height:350px; overflow-y:auto; border: 1px solid #eee; border-radius: 8px;"></div>
+                <div class="form-container" style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: end;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Rapor Türü</label>
+                        <select id="report-type-select" onchange="onReportTypeChange()" class="form-control" style="width:100%; padding:8px;">
+                            <option value="daily-efficiency">Günlük Verimlilik</option>
+                            <option value="personnel-performance">Personel Performansı</option>
+                            <option value="firm-production">Atölye Üretim Raporu</option>
+                            <option value="cumulative-summary">Kümülatif Özet</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Başlangıç Tarihi</label>
+                        <input type="date" id="report-date-start" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Bitiş Tarihi</label>
+                        <input type="date" id="report-date-end" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                </div>
+                <!-- Model Filtresi — tüm rapor türlerinde görünür -->
+                <div id="report-model-filter-row" style="padding: 0 15px 10px 15px;">
+                    <div class="form-group" style="margin-bottom:0; max-width:340px;">
+                        <label style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">🧵 Model / Sipariş Filtresi</label>
+                        <select id="report-model-select" onchange="generateReport()" class="form-control" style="width:100%; padding:8px;">
+                            <option value="">— Tüm Modeller —</option>
+                        </select>
+                    </div>
+                </div>
                 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button id="btn-export-excel" class="btn-primary" style="flex: 1; background: var(--success); justify-content: center;" onclick="exportReportToExcel()"><i class="fa-solid fa-file-excel"></i> Excel Çıktısı Al</button>
-                    <button id="btn-export-pdf" class="btn-primary" style="flex: 1; background: var(--danger); justify-content: center;" onclick="exportReportToPDF()"><i class="fa-solid fa-file-pdf"></i> PDF Yazdır</button>
+                <div style="padding: 15px;">
+                    <!-- Rapor Özeti Kartları -->
+                    <div id="report-summary-cards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:15px;"></div>
+                    
+                    <!-- Rapor Tablo Önizlemesi -->
+                    <div id="report-preview-container" class="table-container" style="max-height:350px; overflow-y:auto; border: 1px solid #eee; border-radius: 8px;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button id="btn-export-excel" class="btn-primary" style="flex: 1; background: var(--success); justify-content: center;" onclick="exportReportToExcel()"><i class="fa-solid fa-file-excel"></i> Excel Çıktısı Al</button>
+                        <button id="btn-export-pdf" class="btn-primary" style="flex: 1; background: var(--danger); justify-content: center;" onclick="exportReportToPDF()"><i class="fa-solid fa-file-pdf"></i> PDF Yazdır</button>
+                    </div>
                 </div>
             </div>
         </div>

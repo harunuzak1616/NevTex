@@ -856,6 +856,12 @@ function applyPermissions() {
     if (refreshBtn) {
         refreshBtn.style.display = currentUser ? 'flex' : 'none';
     }
+
+    // Raporlar butonu görünürlüğü: Atölye kullanıcısında tamamen kaldırıldı
+    const reportsBtn = document.getElementById('btn-global-reports');
+    if (reportsBtn) {
+        reportsBtn.style.display = isAtolye ? 'none' : 'inline-block';
+    }
 }
 
 // Current Date removed as it was replaced by User Profile

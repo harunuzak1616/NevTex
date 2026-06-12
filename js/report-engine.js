@@ -5,6 +5,7 @@
 
 // Aktif rapor verisi (Excel/PDF için saklanır)
 let _reportCurrentData = { type: '', rows: [], headers: [], summary: [], title: '' };
+let _reportSelectedFirmId = null; // Seçilen atölye ID'si (İmalatçı için)
 
 const REPORT_TITLES = {
     'daily-efficiency':      '📊 Günlük Verimlilik Raporu',
@@ -24,47 +25,114 @@ window.openReportModal = function(type) {
 
     const elStart = document.getElementById('report-date-start');
     const elEnd   = document.getElementById('report-date-end');
-    const elType  = document.getElementById('report-type-select');
+    if (elStart) elStart.value = fmt(ago30);
+    if (elEnd)   elEnd.value   = fmt(now);
 
-    // Rol bazlı filtreleme: Atölyeci ise sadece kendi yetkili olduğu raporları görsün
-    const isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    // İlk adım olan Atölye Seçim ekranını göster
+    const step1 = document.getElementById('report-select-firm-step');
+    const step2 = document.getElementById('report-main-step');
+    if (step1) step1.style.display = 'block';
+    if (step2) step2.style.display = 'none';
 
+    // Atölye seçim butonlarını doldur
+    _buildFirmButtonsGrid(type);
+
+    const modal = document.getElementById('report-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+// Rapor türü değişince: model filter her zaman görünür + rapor üret
+window.onReportTypeChange = function() {
+    generateReport();
+};
+
+// Atölye seçim gridini oluştur (İmalatçı için)
+function _buildFirmButtonsGrid(defaultType) {
+    const grid = document.getElementById('report-firm-buttons-grid');
+    if (!grid) return;
+
+    const firms = (typeof mockData !== 'undefined' && mockData.firms) ? mockData.firms : [];
+    
+    let html = '';
+    // Genel / Tüm Atölyeler kartı
+    html += `
+        <div class="firm-report-card glass" onclick="selectReportFirm('all', '${defaultType || ''}')" 
+             style="padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border-color); text-align: center; transition: all 0.2s ease; background: rgba(255,255,255,0.05);"
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)';"
+             onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+            <div style="font-size: 2.2rem; margin-bottom: 12px;">🌐</div>
+            <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-color);">Genel / Tüm Atölyeler</div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 8px 0 0 0; line-height: 1.4;">Tüm atölyelerin birleştirilmiş kümülatif raporları</p>
+        </div>
+    `;
+
+    // Her bir atölye için kart
+    firms.forEach(function(f) {
+        html += `
+            <div class="firm-report-card glass" onclick="selectReportFirm('${f.id}', '${defaultType || ''}')" 
+                 style="padding: 20px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border-color); text-align: center; transition: all 0.2s ease; background: rgba(255,255,255,0.05);"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--primary)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)';"
+                 onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏭</div>
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-color);">${f.name || '-'}</div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin: 8px 0 0 0; line-height: 1.4;">Atölyeye özel detaylı verimlilik ve personel raporları</p>
+            </div>
+        `;
+    });
+
+    grid.innerHTML = html;
+}
+
+// Atölye seçim aksiyonu
+window.selectReportFirm = function(firmId, defaultType) {
+    if (firmId === 'all') {
+        _reportSelectedFirmId = null;
+    } else {
+        _reportSelectedFirmId = String(firmId);
+    }
+
+    const elType = document.getElementById('report-type-select');
     if (elType) {
         let optionsHtml = '';
-        if (isAtolye) {
+        if (_reportSelectedFirmId) {
+            // Spesifik atölye seçildiyse: sadece kendi üretimleri ve personelleri anlamlıdır
             optionsHtml += '<option value="daily-efficiency">Günlük Verimlilik</option>';
             optionsHtml += '<option value="personnel-performance">Personel Performansı</option>';
         } else {
+            // Tüm atölyeler seçildiyse: tüm rapor türleri gösterilir
             optionsHtml += '<option value="daily-efficiency">Günlük Verimlilik</option>';
             optionsHtml += '<option value="personnel-performance">Personel Performansı</option>';
             optionsHtml += '<option value="firm-production">Atölye Üretim Raporu</option>';
             optionsHtml += '<option value="cumulative-summary">Kümülatif Özet</option>';
         }
         elType.innerHTML = optionsHtml;
+        
+        let typeVal = defaultType || 'daily-efficiency';
+        if (_reportSelectedFirmId && (typeVal === 'firm-production' || typeVal === 'cumulative-summary')) {
+            typeVal = 'daily-efficiency';
+        }
+        elType.value = typeVal;
     }
 
-    if (elStart) elStart.value = fmt(ago30);
-    if (elEnd)   elEnd.value   = fmt(now);
-
-    let defaultType = type || 'daily-efficiency';
-    if (isAtolye && (defaultType === 'firm-production' || defaultType === 'cumulative-summary' || defaultType === 'model-production')) {
-        defaultType = 'daily-efficiency';
-    }
-    if (elType) elType.value  = defaultType;
-
-    // Model dropdown'u doldur
+    // Model dropdown'u seçilen atölyeye göre doldur
     _populateModelSelect();
 
-    const modal = document.getElementById('report-modal');
-    if (modal) modal.style.display = 'flex';
+    // Rapor Detay Ekranını Göster
+    const step1 = document.getElementById('report-select-firm-step');
+    const step2 = document.getElementById('report-main-step');
+    if (step1) step1.style.display = 'none';
+    if (step2) step2.style.display = 'block';
 
-    // Kısa gecikme ile DOM hazır olduktan sonra raporu üret
-    setTimeout(function() { onReportTypeChange(); }, 80);
+    // Raporu Üret
+    onReportTypeChange();
 };
 
-// Rapor türü değişince: model filter her zaman görünür + rapor üret
-window.onReportTypeChange = function() {
-    generateReport();
+// Geri Dönüş Aksiyonu
+window.goBackToFirmSelect = function() {
+    const step1 = document.getElementById('report-select-firm-step');
+    const step2 = document.getElementById('report-main-step');
+    if (step1) step1.style.display = 'block';
+    if (step2) step2.style.display = 'none';
 };
 
 // Model dropdown'ı doldur (orders + studies.model_name kaynaklı)
@@ -74,12 +142,13 @@ function _populateModelSelect() {
     var orders  = (typeof mockData !== 'undefined' && mockData.orders)  ? mockData.orders  : [];
     var studies = (typeof mockData !== 'undefined' && mockData.studies) ? mockData.studies : [];
 
-    // Rol bazlı model filtreleme: Atölyeci ise sadece kendi atölyesinin modellerini listele
+    // Hangi atölye aktifse ona göre modelleri filtrele
     const isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    if (isAtolye) {
-        var myFirmId = String(window.currentUser.firmId);
-        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
-        studies = studies.filter(function(s) { return String(s.firmId) === myFirmId; });
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
+
+    if (activeFirmId) {
+        orders = orders.filter(function(o) { return String(o.firmId) === activeFirmId; });
+        studies = studies.filter(function(s) { return String(s.firmId) === activeFirmId; });
     }
 
     var prev = sel.value;
@@ -189,10 +258,10 @@ function _getSelectedModel() {
 function _buildDailyEff(start, end) {
     var selModel = _getSelectedModel();
     var isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
 
     var filtered = (mockData.studies || []).filter(function(s) {
-        if (isAtolye && String(s.firmId) !== myFirmId) return false;
+        if (activeFirmId && String(s.firmId) !== activeFirmId) return false;
         if (!_inRange(s.time || s.created_at, start, end)) return false;
         if (selModel && (s.model_name || '') !== selModel) return false;
         return true;
@@ -240,10 +309,10 @@ function _buildDailyEff(start, end) {
 function _buildPersonnelPerf(start, end) {
     var selModel = _getSelectedModel();
     var isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
 
     var filtered = (mockData.studies || []).filter(function(s) {
-        if (isAtolye && String(s.firmId) !== myFirmId) return false;
+        if (activeFirmId && String(s.firmId) !== activeFirmId) return false;
         if (!_inRange(s.time || s.created_at, start, end)) return false;
         if (selModel && (s.model_name || '') !== selModel) return false;
         return true;
@@ -292,11 +361,11 @@ function _buildModelProd(start, end) {
     var lots   = mockData.lots   || [];
 
     var isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
 
-    if (isAtolye) {
-        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
-        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
+    if (activeFirmId) {
+        orders = orders.filter(function(o) { return String(o.firmId) === activeFirmId; });
+        lots = lots.filter(function(l) { return String(l.firmId) === activeFirmId; });
     }
 
     // Seçilen model filtresi
@@ -354,12 +423,12 @@ function _buildFirmProd(start, end) {
     var orders = mockData.orders  || [];
 
     var isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
 
-    if (isAtolye) {
-        firms = firms.filter(function(f) { return String(f.id) === myFirmId; });
-        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
-        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
+    if (activeFirmId) {
+        firms = firms.filter(function(f) { return String(f.id) === activeFirmId; });
+        lots = lots.filter(function(l) { return String(l.firmId) === activeFirmId; });
+        orders = orders.filter(function(o) { return String(o.firmId) === activeFirmId; });
     }
 
     var rows = firms.map(function(f) {
@@ -388,10 +457,10 @@ function _buildFirmProd(start, end) {
 // ---------------------------------------------
 function _buildCumulative(start, end) {
     var isAtolye = window.currentUser && window.currentUser.firmId !== null;
-    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+    const activeFirmId = isAtolye ? String(window.currentUser.firmId) : _reportSelectedFirmId;
 
     var studies   = (mockData.studies   || []).filter(function(s) { 
-        if (isAtolye && String(s.firmId) !== myFirmId) return false;
+        if (activeFirmId && String(s.firmId) !== activeFirmId) return false;
         return _inRange(s.time || s.created_at, start, end); 
     });
     var lots      = mockData.lots      || [];
@@ -399,11 +468,11 @@ function _buildCumulative(start, end) {
     var personnel = mockData.personnel || [];
     var firms     = mockData.firms     || [];
 
-    if (isAtolye) {
-        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
-        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
-        personnel = personnel.filter(function(p) { return String(p.firmId) === myFirmId; });
-        firms = firms.filter(function(f) { return String(f.id) === myFirmId; });
+    if (activeFirmId) {
+        lots = lots.filter(function(l) { return String(l.firmId) === activeFirmId; });
+        orders = orders.filter(function(o) { return String(o.firmId) === activeFirmId; });
+        personnel = personnel.filter(function(p) { return String(p.firmId) === activeFirmId; });
+        firms = firms.filter(function(f) { return String(f.id) === activeFirmId; });
     }
 
     var totalProd = lots.reduce(function(a, l) { return a + (l.qty || l.quantity || 0); }, 0);
