@@ -862,6 +862,25 @@ function applyPermissions() {
     if (reportsBtn) {
         reportsBtn.style.display = isAtolye ? 'none' : 'inline-block';
     }
+
+    // Atölye Sayısı Kartı ve Departman Verimliliği Kartı Kontrolleri
+    const firmsCountCard = document.getElementById('stat-card-firms-count');
+    const firmsCountEl = document.getElementById('stat-firms-count');
+    if (firmsCountCard) {
+        firmsCountCard.style.display = isAtolye ? 'none' : 'flex';
+        if (!isAtolye && firmsCountEl && mockData.firms) {
+            firmsCountEl.innerText = mockData.firms.length;
+        }
+    }
+
+    const deptCard = document.getElementById('card-dept-efficiency');
+    const chartsContainer = document.querySelector('.charts-container');
+    if (deptCard) {
+        deptCard.style.display = isAtolye ? 'none' : 'block';
+    }
+    if (chartsContainer) {
+        chartsContainer.style.gridTemplateColumns = isAtolye ? '1fr' : '2fr 1fr';
+    }
 }
 
 // Current Date removed as it was replaced by User Profile
@@ -1083,6 +1102,11 @@ function renderOverviewCharts() {
     if (activePersonnelEl) {
         const personnelCount = getFiltered(mockData.personnel || []).length;
         activePersonnelEl.innerText = personnelCount;
+    }
+
+    const firmsCountEl = document.getElementById('stat-firms-count');
+    if (firmsCountEl) {
+        firmsCountEl.innerText = (mockData.firms || []).length;
     }
 
     if (avgEfficiencyEl) {

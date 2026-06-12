@@ -57,9 +57,9 @@
             <div class="nav-menu">
                 <button class="nav-item active" data-target="overview"><i class="fa-solid fa-chart-line"></i> Genel Bakış</button>
                 <button class="nav-item" data-target="personnel"><i class="fa-solid fa-users"></i> Personel</button>
-                <button class="nav-item" data-target="work-study"><i class="fa-solid fa-stopwatch"></i> Zaman Etüdü</button>
+                <button class="nav-item" data-target="work-study"><i class="fa-solid fa-stopwatch"></i> Etüt</button>
                 <button class="nav-item" data-target="planning"><i class="fa-solid fa-calendar-check"></i> Planlama</button>
-                <button class="nav-item" data-target="manufacturing"><i class="fa-solid fa-industry"></i> İmalat Takip</button>
+                <button class="nav-item" data-target="manufacturing"><i class="fa-solid fa-industry"></i> Atölyeler</button>
                 <button class="nav-item" data-target="completed-orders"><i class="fa-solid fa-check-double"></i> Tamamlananlar</button>
                 <button class="nav-item" data-target="file-share-main" id="nav-file-share" style="display:none;"><i class="fa-solid fa-folder-open"></i> Dosya Yönetimi</button>
                 <button class="nav-item" data-target="system-logs"><i class="fa-solid fa-list"></i> Sistem Logları</button>
@@ -132,10 +132,17 @@
                                 <p id="stat-daily-prod-title">Günlük Üretim</p>
                             </div>
                         </div>
+                        <div class="stat-card glass" id="stat-card-firms-count" style="display: none;">
+                            <div class="stat-icon" style="color: var(--secondary); background: rgba(31,81,255,0.1);"><i class="fa-solid fa-industry"></i></div>
+                            <div>
+                                <h3 id="stat-firms-count">0</h3>
+                                <p>Atölye Sayısı</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="charts-container">
                         <div id="model-charts-container" style="display: grid; gap: 20px;"></div>
-                        <div class="chart-card glass">
+                        <div class="chart-card glass" id="card-dept-efficiency">
                             <h3>Departman Verimliliği</h3>
                             <div id="dept-efficiency" style="margin-top: 15px;"></div>
                         </div>
