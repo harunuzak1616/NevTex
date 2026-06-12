@@ -9,7 +9,6 @@ let _reportCurrentData = { type: '', rows: [], headers: [], summary: [], title: 
 const REPORT_TITLES = {
     'daily-efficiency':      '📊 Günlük Verimlilik Raporu',
     'personnel-performance': '👤 Personel Performans Raporu',
-    'model-production':      '🧵 Model Üretim Raporu',
     'firm-production':       '🏭 Atölye Üretim Raporu',
     'cumulative-summary':    '📈 Kümülatif Özet Raporu'
 };
@@ -26,9 +25,32 @@ window.openReportModal = function(type) {
     const elStart = document.getElementById('report-date-start');
     const elEnd   = document.getElementById('report-date-end');
     const elType  = document.getElementById('report-type-select');
+
+    // Rol bazlı filtreleme: Atölyeci ise sadece kendi yetkili olduğu raporları görsün
+    const isAtolye = window.currentUser && window.currentUser.firmId !== null;
+
+    if (elType) {
+        let optionsHtml = '';
+        if (isAtolye) {
+            optionsHtml += '<option value="daily-efficiency">Günlük Verimlilik</option>';
+            optionsHtml += '<option value="personnel-performance">Personel Performansı</option>';
+        } else {
+            optionsHtml += '<option value="daily-efficiency">Günlük Verimlilik</option>';
+            optionsHtml += '<option value="personnel-performance">Personel Performansı</option>';
+            optionsHtml += '<option value="firm-production">Atölye Üretim Raporu</option>';
+            optionsHtml += '<option value="cumulative-summary">Kümülatif Özet</option>';
+        }
+        elType.innerHTML = optionsHtml;
+    }
+
     if (elStart) elStart.value = fmt(ago30);
     if (elEnd)   elEnd.value   = fmt(now);
-    if (elType)  elType.value  = type || 'daily-efficiency';
+
+    let defaultType = type || 'daily-efficiency';
+    if (isAtolye && (defaultType === 'firm-production' || defaultType === 'cumulative-summary' || defaultType === 'model-production')) {
+        defaultType = 'daily-efficiency';
+    }
+    if (elType) elType.value  = defaultType;
 
     // Model dropdown'u doldur
     _populateModelSelect();
@@ -51,6 +73,14 @@ function _populateModelSelect() {
     if (!sel) return;
     var orders  = (typeof mockData !== 'undefined' && mockData.orders)  ? mockData.orders  : [];
     var studies = (typeof mockData !== 'undefined' && mockData.studies) ? mockData.studies : [];
+
+    // Rol bazlı model filtreleme: Atölyeci ise sadece kendi atölyesinin modellerini listele
+    const isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    if (isAtolye) {
+        var myFirmId = String(window.currentUser.firmId);
+        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
+        studies = studies.filter(function(s) { return String(s.firmId) === myFirmId; });
+    }
 
     var prev = sel.value;
     sel.innerHTML = '<option value="">— Tüm Modeller —</option>';
@@ -158,7 +188,11 @@ function _getSelectedModel() {
 // ---------------------------------------------
 function _buildDailyEff(start, end) {
     var selModel = _getSelectedModel();
+    var isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+
     var filtered = (mockData.studies || []).filter(function(s) {
+        if (isAtolye && String(s.firmId) !== myFirmId) return false;
         if (!_inRange(s.time || s.created_at, start, end)) return false;
         if (selModel && (s.model_name || '') !== selModel) return false;
         return true;
@@ -205,7 +239,11 @@ function _buildDailyEff(start, end) {
 // ---------------------------------------------
 function _buildPersonnelPerf(start, end) {
     var selModel = _getSelectedModel();
+    var isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+
     var filtered = (mockData.studies || []).filter(function(s) {
+        if (isAtolye && String(s.firmId) !== myFirmId) return false;
         if (!_inRange(s.time || s.created_at, start, end)) return false;
         if (selModel && (s.model_name || '') !== selModel) return false;
         return true;
@@ -252,6 +290,14 @@ function _buildPersonnelPerf(start, end) {
 function _buildModelProd(start, end) {
     var orders = mockData.orders || [];
     var lots   = mockData.lots   || [];
+
+    var isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+
+    if (isAtolye) {
+        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
+        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
+    }
 
     // Seçilen model filtresi
     var selModelId = '';
@@ -307,6 +353,15 @@ function _buildFirmProd(start, end) {
     var lots   = mockData.lots    || [];
     var orders = mockData.orders  || [];
 
+    var isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+
+    if (isAtolye) {
+        firms = firms.filter(function(f) { return String(f.id) === myFirmId; });
+        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
+        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
+    }
+
     var rows = firms.map(function(f) {
         var fLots    = lots.filter(function(l) { return String(l.firm_id || l.firmId) === String(f.id); });
         var fOrders  = orders.filter(function(o) { return String(o.firm_id || o.firmId) === String(f.id); });
@@ -332,11 +387,25 @@ function _buildFirmProd(start, end) {
 //  RAPOR 5: Kümülatif Özet
 // ---------------------------------------------
 function _buildCumulative(start, end) {
-    var studies   = (mockData.studies   || []).filter(function(s) { return _inRange(s.time || s.created_at, start, end); });
+    var isAtolye = window.currentUser && window.currentUser.firmId !== null;
+    var myFirmId = isAtolye ? String(window.currentUser.firmId) : null;
+
+    var studies   = (mockData.studies   || []).filter(function(s) { 
+        if (isAtolye && String(s.firmId) !== myFirmId) return false;
+        return _inRange(s.time || s.created_at, start, end); 
+    });
     var lots      = mockData.lots      || [];
     var orders    = mockData.orders    || [];
     var personnel = mockData.personnel || [];
     var firms     = mockData.firms     || [];
+
+    if (isAtolye) {
+        lots = lots.filter(function(l) { return String(l.firmId) === myFirmId; });
+        orders = orders.filter(function(o) { return String(o.firmId) === myFirmId; });
+        personnel = personnel.filter(function(p) { return String(p.firmId) === myFirmId; });
+        firms = firms.filter(function(f) { return String(f.id) === myFirmId; });
+    }
+
     var totalProd = lots.reduce(function(a, l) { return a + (l.qty || l.quantity || 0); }, 0);
     var avgEff    = studies.length > 0
         ? Math.round(studies.reduce(function(a, s) { return a + (s.cycle_time > 0 ? (s.efficiency / s.cycle_time) * 100 : 0); }, 0) / studies.length)
