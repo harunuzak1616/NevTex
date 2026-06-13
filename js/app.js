@@ -1012,10 +1012,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
             const name = document.getElementById('new-p-name').value;
             const dept = document.getElementById('new-p-dept').value;
-            const shift = document.getElementById('new-p-shift').value;
             const firmId = currentUser ? currentUser.firmId : null;
             try {
-                const { error } = await supabaseClient.from('personnel').insert({ name, dept, shift, firm_id: firmId });
+                const { error } = await supabaseClient.from('personnel').insert({ name, dept, shift: 'Gündüz', firm_id: firmId });
                 if (error) throw error;
                 await loadData();
                 renderPersonnel();
@@ -1772,7 +1771,6 @@ document.getElementById('add-personnel-form').addEventListener('submit', async (
     e.preventDefault();
     const name = document.getElementById('new-p-name').value;
     const dept = document.getElementById('new-p-dept').value;
-    const shift = document.getElementById('new-p-shift').value;
     const firmId = currentUser ? currentUser.firmId : null;
 
     let finalName = name;
@@ -1793,7 +1791,7 @@ document.getElementById('add-personnel-form').addEventListener('submit', async (
         const { error } = await supabaseClient.from('personnel').insert({
             name: finalName,
             dept: dept,
-            shift: shift,
+            shift: 'Gündüz',
             firm_id: firmId
         });
 

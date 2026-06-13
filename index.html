@@ -24,7 +24,7 @@
     <!-- Login Overlay -->
     <div id="login-overlay">
         <div class="login-box glass">
-            <i class="fa-solid fa-shield-halved"></i>
+            <i class="fa-solid fa-shirt"></i>
             <h2>Nev Tex Pro</h2>
             <p style="margin-bottom: 20px; color: var(--text-muted);">Sisteme Giriş Yapın</p>
             <form id="login-form">
@@ -195,6 +195,10 @@
                                     <option value="15:00 - 16:00">15:00 - 16:00</option>
                                     <option value="16:00 - 17:00">16:00 - 17:00</option>
                                     <option value="17:00 - 18:00">17:00 - 18:00</option>
+                                    <option value="18:00 - 19:00">18:00 - 19:00</option>
+                                    <option value="19:00 - 20:00">19:00 - 20:00</option>
+                                    <option value="20:00 - 21:00">20:00 - 21:00</option>
+                                    <option value="21:00 - 22:00">21:00 - 22:00</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -620,11 +624,14 @@
                 </div>
                 <div class="form-group">
                     <label>Departman</label>
-                    <input type="text" id="new-p-dept" required class="form-control" style="width:100%; padding:8px;">
-                </div>
-                <div class="form-group">
-                    <label>Vardiya</label>
-                    <input type="text" id="new-p-shift" required class="form-control" style="width:100%; padding:8px;">
+                    <select id="new-p-dept" required class="form-control" style="width:100%; padding:8px;">
+                        <option value="">Departman Seçin</option>
+                        <option value="Kesim">Kesim</option>
+                        <option value="Dikim">Dikim</option>
+                        <option value="Ütü">Ütü</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Sevkiyat">Sevkiyat</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn-primary w-100 mt-2" style="justify-content: center;">Kaydet</button>
             </form>

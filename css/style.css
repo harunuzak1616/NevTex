@@ -751,7 +751,7 @@ p { color: var(--text-muted); line-height: 1.5; }
 #login-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1920&auto=format&fit=crop') center/cover;
+    background: url('https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=1920&auto=format&fit=crop') center/cover;
     z-index: 9999;
     display: flex;
     justify-content: center;
