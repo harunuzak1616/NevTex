@@ -1005,24 +1005,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Form Listeners ---
     // (study-form submit listener removed in favor of window.saveWorkStudyData for stability)
-
-    const personnelForm = document.getElementById('add-personnel-form');
-    if (personnelForm) {
-        personnelForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('new-p-name').value;
-            const dept = document.getElementById('new-p-dept').value;
-            const firmId = currentUser ? currentUser.firmId : null;
-            try {
-                const { error } = await supabaseClient.from('personnel').insert({ name, dept, shift: 'Gündüz', firm_id: firmId });
-                if (error) throw error;
-                await loadData();
-                renderPersonnel();
-                closeModal('add-personnel-modal');
-                e.target.reset();
-            } catch (err) { alert("Hata: " + err.message); }
-        });
-    }
+    // (personnel-form submit listener is defined globally below to avoid duplicate)
 
 
 });

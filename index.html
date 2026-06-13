@@ -670,14 +670,6 @@
                     <label>Atölye Seçin</label>
                     <select id="new-m-firm" class="form-control" style="width:100%; padding:8px;"></select>
                 </div>
-                <div class="form-group">
-                    <label>Seri Çizim / Pastal Dosyası (Çoklu)</label>
-                    <input type="file" id="new-m-files" multiple class="form-control" style="width:100%; padding:8px;">
-                </div>
-                <div class="form-group">
-                    <label>Model Görselleri (Çoklu)</label>
-                    <input type="file" id="new-m-images" accept="image/*" multiple class="form-control" style="width:100%; padding:8px;">
-                </div>
                 <button type="submit" class="btn-primary w-100 mt-2" style="justify-content: center;">Sipariş Oluştur</button>
             </form>
         </div>
@@ -737,101 +729,38 @@
             <form id="edit-model-form" style="padding:15px;">
                 <input type="hidden" id="edit-m-id">
                 
-                <div class="tabs-sub" style="margin-bottom: 15px;">
-                    <button type="button" class="sub-tab active" data-subtarget="edit-m-general">Genel Bilgiler & Kumaş</button>
-                    <button type="button" class="sub-tab" data-subtarget="edit-m-drawings">Çizimler & Görseller</button>
-                </div>
-                
-                <!-- Genel Bilgiler Sekmesi -->
-                <div id="edit-m-general" class="sub-section" style="display: block;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label>Müşteri / Marka</label>
-                            <input type="text" id="edit-m-customer" required class="form-control" style="width:100%; padding:8px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Model Adı</label>
-                            <input type="text" id="edit-m-name" required class="form-control" style="width:100%; padding:8px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Sipariş Adedi</label>
-                            <input type="number" id="edit-m-qty" required class="form-control" style="width:100%; padding:8px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Başlangıç Tarihi</label>
-                            <input type="date" id="edit-m-start" class="form-control" style="width:100%; padding:8px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Teslim Tarihi</label>
-                            <input type="date" id="edit-m-end" class="form-control" style="width:100%; padding:8px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Kumaş Türü</label>
-                            <input type="text" id="edit-fab-type" readonly style="background: rgba(0,0,0,0.05); width:100%; padding:8px;" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Kumaş Adı / Kodu</label>
-                            <input type="text" id="edit-fab-name" readonly style="background: rgba(0,0,0,0.05); width:100%; padding:8px;" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Kumaş Topu</label>
-                            <input type="text" id="edit-fab-rolls" readonly style="background: rgba(0,0,0,0.05); width:100%; padding:8px;" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Kumaş Metrajı</label>
-                            <input type="text" id="edit-fab-meter" readonly style="background: rgba(0,0,0,0.05); width:100%; padding:8px;" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Kumaş Ağırlığı (Kg)</label>
-                            <input type="text" id="edit-fab-kg" readonly style="background: rgba(0,0,0,0.05); width:100%; padding:8px;" class="form-control">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Aksesuar & Malzeme İhtiyaçları</label>
-                        <textarea id="edit-m-accessories" rows="2" placeholder="Düğme, iplik, fermuar vb. detayları yazın" class="form-control" style="width:100%; padding:8px;"></textarea>
-                    </div>
-                    
+                <!-- Temel Sipariş Bilgileri -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label>Numune / Tasarım Notları</label>
-                        <textarea id="edit-m-sample-note" rows="2" placeholder="Numune süreci veya kalıp ile ilgili notlar" class="form-control" style="width:100%; padding:8px;"></textarea>
+                        <label>Müşteri / Marka</label>
+                        <input type="text" id="edit-m-customer" required class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Model Adı</label>
+                        <input type="text" id="edit-m-name" required class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Sipariş Adedi</label>
+                        <input type="number" id="edit-m-qty" required class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Başlangıç Tarihi</label>
+                        <input type="date" id="edit-m-start" class="form-control" style="width:100%; padding:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Teslim Tarihi</label>
+                        <input type="date" id="edit-m-end" class="form-control" style="width:100%; padding:8px;">
                     </div>
                 </div>
                 
-                <!-- Çizimler Sekmesi -->
-                <div id="edit-m-drawings" class="sub-section" style="display: none;">
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        
-                        <!-- Numune Dosyası -->
-                        <div class="glass" style="padding: 15px; border-radius: 8px;">
-                            <h4 style="margin-bottom:10px;">Numune Çizimi</h4>
-                            <div id="current-sample-file" style="margin: 10px 0; font-size: 0.9rem;"></div>
-                            <div class="form-group">
-                                <label>Yeni Numune Çizimi Yükle</label>
-                                <input type="file" id="edit-m-sample-file" class="form-control" style="width:100%; padding:8px;">
-                            </div>
-                        </div>
-                        
-                        <!-- Seri Çizimler -->
-                        <div class="glass" style="padding: 15px; border-radius: 8px;">
-                            <h4 style="margin-bottom:10px;">Seri Çizim & Pastal Dosyaları</h4>
-                            <div id="current-normal-files" style="margin: 10px 0; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px;"></div>
-                            <div class="form-group">
-                                <label>Yeni Çizim/Pastal Ekle</label>
-                                <input type="file" id="edit-m-normal-files" multiple class="form-control" style="width:100%; padding:8px;">
-                            </div>
-                        </div>
-                        
-                        <!-- Model Görselleri -->
-                        <div class="glass" style="padding: 15px; border-radius: 8px;">
-                            <h4 style="margin-bottom:10px;">Model Görselleri</h4>
-                            <div id="current-model-images" style="margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap;"></div>
-                            <div class="form-group">
-                                <label>Yeni Görsel Ekle</label>
-                                <input type="file" id="edit-m-extra-images" accept="image/*" multiple class="form-control" style="width:100%; padding:8px;">
-                            </div>
-                        </div>
-                    </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Aksesuar & Malzeme İhtiyaçları</label>
+                    <textarea id="edit-m-accessories" rows="2" placeholder="Düğme, iplik, fermuar vb. detayları yazın" class="form-control" style="width:100%; padding:8px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Numune / Tasarım Notları</label>
+                    <textarea id="edit-m-sample-note" rows="2" placeholder="Numune süreci veya kalıp ile ilgili notlar" class="form-control" style="width:100%; padding:8px;"></textarea>
                 </div>
                 
                 <button type="submit" class="btn-primary w-100 mt-2" style="justify-content: center; font-size: 1rem; padding: 12px;"><i class="fa-solid fa-floppy-disk"></i> Bilgileri Güncelle</button>
