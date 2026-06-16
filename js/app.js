@@ -1385,7 +1385,9 @@ function renderDeptEfficiency() {
         </div>
         `;
     });
-    container.innerHTML = html;
+    if (container) {
+        container.innerHTML = html;
+    }
 }
 
 function renderPersonnel() {

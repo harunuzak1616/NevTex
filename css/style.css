@@ -31,13 +31,15 @@
     font-family: 'Inter', sans-serif;
 }
 
-body {
+body, html {
     background: var(--bg-main);
     color: var(--text-main);
     /* Subtle gradient background */
     background: linear-gradient(135deg, #eef1ff 0%, #f4f7f6 100%);
     min-height: 100vh;
     overflow-x: hidden;
+    width: 100vw;
+    max-width: 100%;
 }
 
 /* Typography */
