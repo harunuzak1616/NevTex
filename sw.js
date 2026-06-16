@@ -1,10 +1,10 @@
-const CACHE_NAME = 'nev-tex-pro-v1';
+const CACHE_NAME = 'nev-tex-pro-v2';
 const ASSETS = [
   'index.html',
   'css/style.css',
   'js/app.js',
-  'app-icon.png',
-  'manifest.json'
+  'app-icon.png?v=2',
+  'manifest.json?v=2'
 ];
 
 // Install Event
