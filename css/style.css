@@ -37,9 +37,6 @@ body, html {
     /* Subtle gradient background */
     background: linear-gradient(135deg, #eef1ff 0%, #f4f7f6 100%);
     min-height: 100vh;
-    overflow-x: hidden;
-    width: 100vw;
-    max-width: 100%;
 }
 
 /* Typography */
@@ -508,16 +505,27 @@ p { color: var(--text-muted); line-height: 1.5; }
         order: 1;
         height: calc(100vh - 60px); /* Bottom nav yüksekliğini çıkar */
         overflow-y: auto;
-        overflow-x: hidden;
-        width: 100%;
         padding: 10px;
     }
 
     /* Tablo responsive ayarları */
     .table-container {
+        width: 100%;
+        max-width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         margin-bottom: 10px;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 12px;
+    }
+
+    .split-layout {
+        width: 100%;
+        max-width: 100%;
     }
 
     /* ---- HEADER ---- */
