@@ -487,17 +487,17 @@ p { color: var(--text-muted); line-height: 1.5; }
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
-        padding: 8px 10px;
-        font-size: 0.6rem;
+        gap: 5px;
+        padding: 10px 14px;
+        font-size: 0.75rem;
         border-radius: 8px;
-        min-width: 56px;
+        min-width: 70px;
         flex-shrink: 0;
         white-space: nowrap;
     }
 
     .nav-item i {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
     }
 
     /* ---- ANA İÇERİK ---- */
@@ -518,22 +518,29 @@ p { color: var(--text-muted); line-height: 1.5; }
     /* ---- HEADER ---- */
     .top-header {
         margin: 8px;
-        padding: 10px 12px;
+        padding: 12px;
         height: auto;
         border-radius: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
 
     .top-header h1,
     #page-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
     }
 
     .user-profile {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
         gap: 8px;
     }
 
-    #header-username { font-size: 0.75rem; }
-    #header-role { font-size: 0.65rem; }
+    #header-username { font-size: 0.8rem; }
+    #header-role { font-size: 0.7rem; }
 
     .avatar {
         width: 32px;
