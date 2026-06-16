@@ -749,37 +749,92 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     });
     
     if(foundUser) {
-        currentUser = { ...foundUser, permissions: rolePermissions[foundUser.role] || [] };
+        // Oturum kontrolü (Presence)
+        const channelName = 'session_' + foundUser.username;
+        const tempChannel = supabaseClient.channel(channelName);
         
-        try {
-            if (remember) {
-                localStorage.setItem('texTrackUser', user);
-                localStorage.setItem('texTrackPass', pass);
+        const currentSessionToken = Date.now().toString() + Math.random().toString(36).substr(2);
+        
+        let syncTimeout = setTimeout(() => {
+            finishLogin(foundUser, tempChannel);
+        }, 1500);
+
+        tempChannel.on('presence', { event: 'sync' }, () => {
+            const state = tempChannel.presenceState();
+            const activeSessions = Object.values(state).flat();
+            
+            // Eğer bizden (bu cihazdan) başka biri varsa:
+            const hasOtherSession = activeSessions.some(s => s.token && s.token !== currentSessionToken);
+            
+            if (hasOtherSession) {
+                clearTimeout(syncTimeout);
+                tempChannel.unsubscribe();
+                
+                // localStorage temizle otomatik login'i bozmak için
+                try {
+                    localStorage.removeItem('texTrackUser');
+                    localStorage.removeItem('texTrackPass');
+                } catch(e) {}
+                
+                alert("Uyarı: Şu anda hesabınız başka bir telefonda veya PC'de açık! Lütfen diğer cihazdan çıkış yapın.");
             } else {
-                localStorage.removeItem('texTrackUser');
-                localStorage.removeItem('texTrackPass');
+                clearTimeout(syncTimeout);
+                finishLogin(foundUser, tempChannel, remember, user, pass);
             }
-        } catch (e) {
-            console.warn("Local storage kullanılamıyor.");
-        }
-        
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-app').style.display = 'flex';
-        
-        document.getElementById('header-username').innerText = currentUser.username;
-        document.getElementById('header-role').innerText = currentUser.role;
-        
-        applyPermissions();
-        addSystemLog("Sisteme giriş yaptı.");
-        
-        // Giriş yapıldığında mesajları yükle ve hazırla
-        loadChatMessages().catch(err => console.warn("Initial login chat load failed", err));
+        });
+
+        tempChannel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await tempChannel.track({ token: currentSessionToken, joinedAt: Date.now() });
+            }
+        });
+
     } else {
         alert("Hatalı kullanıcı adı veya şifre!");
     }
 });
 
+let activeSessionChannel = null;
+
+function finishLogin(foundUser, channel, remember, user, pass) {
+    if (activeSessionChannel && activeSessionChannel !== channel) {
+        activeSessionChannel.unsubscribe();
+    }
+    activeSessionChannel = channel;
+    
+    currentUser = { ...foundUser, permissions: rolePermissions[foundUser.role] || [] };
+    
+    try {
+        if (remember) {
+            localStorage.setItem('texTrackUser', user);
+            localStorage.setItem('texTrackPass', pass);
+        } else {
+            localStorage.removeItem('texTrackUser');
+            localStorage.removeItem('texTrackPass');
+        }
+    } catch (e) {
+        console.warn("Local storage kullanılamıyor.");
+    }
+    
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    
+    document.getElementById('header-username').innerText = currentUser.username;
+    document.getElementById('header-role').innerText = currentUser.role;
+    
+    applyPermissions();
+    addSystemLog("Sisteme giriş yaptı.");
+    
+    // Giriş yapıldığında mesajları yükle ve hazırla
+    loadChatMessages().catch(err => console.warn("Initial login chat load failed", err));
+}
+
 window.logout = function() {
+    if (activeSessionChannel) {
+        activeSessionChannel.unsubscribe();
+        activeSessionChannel = null;
+    }
+    
     if (currentUser) {
         addSystemLog("Sistemden çıkış yaptı.");
     }
