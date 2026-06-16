@@ -508,6 +508,8 @@ p { color: var(--text-muted); line-height: 1.5; }
         order: 1;
         height: calc(100vh - 60px); /* Bottom nav yüksekliğini çıkar */
         overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
         padding: 10px;
     }
 
