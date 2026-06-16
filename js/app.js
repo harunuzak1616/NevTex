@@ -823,7 +823,9 @@ function finishLogin(foundUser, channel, remember, user, pass) {
     document.getElementById('header-role').innerText = currentUser.role;
     
     applyPermissions();
-    addSystemLog("Sisteme giriş yaptı.");
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const deviceType = isMobile ? 'Mobil / Telefon' : 'Masaüstü / Bilgisayar';
+    addSystemLog(`Sisteme giriş yaptı. (${deviceType})`);
     
     // Giriş yapıldığında mesajları yükle ve hazırla
     loadChatMessages().catch(err => console.warn("Initial login chat load failed", err));
